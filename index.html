@@ -1,0 +1,681 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>PrintMate — Retro Analyzer</title>
+
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+
+<!-- EmailJS SDK -->
+<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3.2.0/dist/email.min.js"></script>
+
+<style>
+  :root{
+    --bg-1: #071026;   /* deep navy */
+    --bg-2: #08142a;
+    --neon-cyan: #00f0ff;
+    --neon-mag: #ff3adf;
+    --neon-lime: #b5ff4d;
+    --panel: rgba(255,255,255,0.04);
+    --glass: rgba(255,255,255,0.03);
+    --muted: #9fb0c6;
+    --card-radius:18px;
+    --max-w:1100px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg-1),var(--bg-2));font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial;color:#e6f7ff;overflow:hidden}
+  a{color:inherit}
+  /* container that holds "pages" */
+  .viewport{width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+  .stage-wrap{width:100%;height:100%;display:flex;flex-direction:row;transition:transform .9s cubic-bezier(.16,.84,.24,1);will-change:transform}
+  .stage{min-width:100%;height:100%;display:flex;align-items:center;justify-content:center;padding:48px;position:relative}
+
+  /* retro frame */
+  .panel{
+    width:clamp(320px,84vw, var(--max-w));
+    height:clamp(480px,78vh,820px);
+    background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(8,18,34,0.08));
+    border-radius:var(--card-radius);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+    border:1px solid rgba(255,255,255,0.04);
+    padding:28px;
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+    position:relative;
+    overflow:hidden;
+  }
+
+  /* scanlines overlay */
+  .scanlines::before{
+    content:""; position:absolute; left:0; right:0; top:0; bottom:0;
+    background-image: linear-gradient(transparent 92%, rgba(255,255,255,0.02) 100%);
+    background-size: 100% 4px;
+    mix-blend-mode: overlay; pointer-events:none; opacity:0.6;
+  }
+
+  /* header */
+  .header{display:flex;align-items:center;gap:16px}
+  .logoBox{
+    width:68px;height:68px;border-radius:12px;background:linear-gradient(135deg,var(--neon-cyan),var(--neon-mag));
+    display:flex;align-items:center;justify-content:center;box-shadow:0 10px 30px rgba(0,0,0,0.5);
+    transform:rotate(-6deg);
+  }
+  .logoBox svg{width:44px;height:44px;filter:drop-shadow(0 10px 30px rgba(0,240,255,0.12))}
+  h1{margin:0;font-family:'Press Start 2P',monospace;font-size:20px;color:var(--neon-cyan);text-shadow:0 4px 18px rgba(0,240,255,0.06)}
+  .subtitle{font-size:13px;color:var(--muted);margin-top:6px}
+
+  /* content columns */
+  .cols{display:flex;gap:20px;align-items:stretch;flex:1}
+  .leftCol{flex:1;display:flex;flex-direction:column;gap:14px}
+  .rightCol{width:420px;min-width:260px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;padding:16px;border:1px solid rgba(255,255,255,0.03);display:flex;flex-direction:column;gap:12px}
+
+  /* big neon title on landing */
+  .bigTitle{font-family:'Press Start 2P',monospace;font-size:40px;color:var(--neon-mag);text-align:center;letter-spacing:1px;margin:12px 0 6px;text-shadow:0 8px 36px rgba(255,58,223,0.08)}
+  .leadSmall{text-align:center;color:var(--muted);font-size:14px;margin-bottom:8px}
+
+  /* input and buttons */
+  .input{
+    background:rgba(0,0,0,0.18);border-radius:12px;padding:12px;border:1px solid rgba(255,255,255,0.04);display:flex;gap:8px;align-items:center;
+  }
+  input[type="url"]{
+    flex:1;background:transparent;border:0;color:#e6f7ff;font-size:15px;outline:none;padding:6px 4px;
+  }
+  .btn{
+    padding:10px 14px;border-radius:12px;border:0;cursor:pointer;font-weight:700;font-size:13px;letter-spacing:0.4px;
+    box-shadow:0 10px 28px rgba(0,0,0,0.5);transition:transform .12s, box-shadow .12s;
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn.neon{
+    background:linear-gradient(90deg,var(--neon-cyan),var(--neon-mag));
+    color:#041018;text-shadow:0 2px 8px rgba(255,255,255,0.06);
+  }
+  .btn.ghost{
+    background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--neon-cyan)
+  }
+  .muted{color:var(--muted);font-size:13px}
+
+  /* preview card */
+  .preview{
+    display:flex;gap:12px;align-items:center;padding:12px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.02)
+  }
+  .preview .icon{width:80px;height:80px;border-radius:10px;background:linear-gradient(180deg,#071026,#0b213a);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--neon-cyan);font-size:12px}
+  .preview .meta{flex:1}
+  .preview .path{font-weight:700;color:#c8faff;word-break:break-all}
+  .preview .domain{color:var(--muted);font-size:13px}
+
+  /* filament grid */
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  .fil-card{display:flex;gap:12px;align-items:center;padding:10px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.02);cursor:pointer;transition:transform .14s, box-shadow .14s}
+  .fil-card:hover{transform:translateY(-6px);box-shadow:0 24px 44px rgba(0,0,0,0.6)}
+  .spool{width:56px;height:56px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#08111b;box-shadow:inset 0 -6px 12px rgba(0,0,0,0.15)}
+  .fil-meta .name{font-weight:700}
+  .fil-meta .sub{font-size:13px;color:var(--muted)}
+
+  /* selected state */
+  .fil-card.selected{box-shadow:0 30px 60px rgba(0,0,0,0.65);outline:3px solid rgba(255,58,223,0.12);transform:translateY(-10px) scale(1.01)}
+
+  /* footer bar */
+  .footer{display:flex;justify-content:space-between;align-items:center;gap:12px; margin-top:6px}
+  .count{font-weight:700;color:var(--neon-lime)}
+
+  /* transitions & animations */
+  .flicker{animation:flicker .9s linear infinite}
+  @keyframes flicker{0%,100%{opacity:1}50%{opacity:.96}}
+  .scanline-move{animation:scan .75s linear infinite}
+  @keyframes scan{0%{background-position:0 0}100%{background-position:0 8px}}
+
+  /* page transitions decorative */
+  .wipe{
+    pointer-events:none; position:absolute; left:-40%; right:-40%; top:0; bottom:0; background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.09), rgba(255,255,255,0.02)); transform:skewX(-14deg) translateX(-120%); transition:transform .9s cubic-bezier(.2,.9,.3,1)
+  }
+
+  /* tiny toast */
+  .toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);background:rgba(0,0,0,0.7);padding:10px 14px;border-radius:999px;color:#fff;font-weight:700;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(-8px);pointer-events:auto}
+
+  /* responsive */
+  @media (max-width:920px){
+    .cols{flex-direction:column}
+    .rightCol{width:100%}
+    .grid{grid-template-columns:repeat(2,1fr)}
+    .bigTitle{font-size:26px}
+  }
+  @media (max-width:520px){
+    .grid{grid-template-columns:repeat(1,1fr)}
+    .leftCol{order:2}
+    .rightCol{order:1}
+    .panel{padding:18px}
+  }
+</style>
+</head>
+<body>
+
+<div class="viewport">
+  <div class="stage-wrap" id="stageWrap">
+
+    <!-- === Stage 1: Landing / Start === -->
+    <section class="stage" aria-label="Landing">
+      <div class="panel scanlines" role="region" aria-labelledby="landingTitle">
+        <div class="header">
+          <div class="logoBox" aria-hidden="true">
+            <!-- simple retro spool logo -->
+            <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <rect x="6" y="14" width="52" height="36" rx="8" fill="#041426"></rect>
+              <path d="M12 22c10-8 36-8 44 0" stroke="#00F0FF" stroke-width="2.6" stroke-linecap="round"></path>
+              <circle cx="22" cy="32" r="5" fill="#FF3ADF"></circle>
+            </svg>
+          </div>
+          <div>
+            <h1 id="landingTitle">PRINTMATE</h1>
+            <div class="subtitle">Retro-Funky Model Analyzer</div>
+          </div>
+        </div>
+
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px">
+          <div class="bigTitle flicker">ANALYZE • SELECT • SHARE</div>
+          <div class="leadSmall muted">Paste a Thingiverse or MakerWorld model — pick filament — email the results. Fast, minimal, neon.</div>
+
+          <div style="margin-top:16px;display:flex;gap:12px;">
+            <button id="start" class="btn neon" aria-label="Start">START</button>
+            <button id="howItWorks" class="btn ghost" aria-label="How it works">HOW IT WORKS</button>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px dashed rgba(255,255,255,0.03);padding-top:12px;">
+          <div class="muted">Made for quick sharing with friends</div>
+          <div class="muted">v1.0 · retro build</div>
+        </div>
+
+        <div class="wipe" id="wipe1"></div>
+      </div>
+    </section>
+
+    <!-- === Stage 2: Analyze === -->
+    <section class="stage" aria-label="Analyze Link">
+      <div class="panel scanlines" role="region" aria-labelledby="analyzeTitle">
+        <div class="header">
+          <div class="logoBox" aria-hidden="true">
+            <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <rect x="6" y="14" width="52" height="36" rx="8" fill="#071026"></rect>
+              <path d="M12 22c10-8 36-8 44 0" stroke="#00F0FF" stroke-width="2.6" stroke-linecap="round"></path>
+              <circle cx="22" cy="32" r="5" fill="#FF3ADF"></circle>
+            </svg>
+          </div>
+          <div>
+            <h1 id="analyzeTitle" style="color:var(--neon-lime)">LINK ANALYZER</h1>
+            <div class="subtitle">Paste a Thingiverse or MakerWorld model link below</div>
+          </div>
+        </div>
+
+        <div class="cols" style="margin-top:6px">
+          <div class="leftCol">
+            <div class="muted">Instructions</div>
+            <div style="background:var(--panel);border-radius:12px;padding:12px;border:1px solid rgba(255,255,255,0.02)">
+              <ol style="margin:0 0 0 18px;color:var(--muted);font-size:14px">
+                <li>Open Thingiverse or MakerWorld and find the model page.</li>
+                <li>Copy the page URL from your browser address bar.</li>
+                <li>Paste it below and click <strong>Analyze</strong>.</li>
+              </ol>
+            </div>
+
+            <div style="margin-top:12px">
+              <label class="muted">Model link</label>
+              <div class="input" style="margin-top:8px">
+                <input type="url" id="modelInput" placeholder="https://www.thingiverse.com/thing:123456 or https://makerworld.com/models/..." aria-label="Model URL">
+                <button id="analyzeBtn" class="btn neon">ANALYZE</button>
+              </div>
+              <div id="errMsg" class="muted" style="margin-top:8px; color:#ff9fb9; display:none"></div>
+            </div>
+
+            <div style="margin-top:14px">
+              <div class="muted">Quick tips</div>
+              <div class="muted" style="font-size:13px;margin-top:6px">For Thingiverse look for URLs containing <code>thing:NUMBER</code>. MakerWorld links often contain <code>/models/</code>.</div>
+            </div>
+
+          </div>
+
+          <aside class="rightCol">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <div class="muted">Analysis Preview</div>
+              <div id="anStatus" class="muted">idle</div>
+            </div>
+
+            <div id="previewArea" style="margin-top:6px">
+              <div class="muted" style="font-size:13px">No link analyzed yet.</div>
+            </div>
+
+            <div style="margin-top:auto;display:flex;gap:8px;justify-content:flex-end">
+              <button id="backToStart" class="btn ghost">BACK</button>
+              <button id="toFilament" class="btn neon" disabled>CONTINUE</button>
+            </div>
+          </aside>
+        </div>
+
+        <div class="wipe" id="wipe2"></div>
+      </div>
+    </section>
+
+    <!-- === Stage 3: Filament Selection & Send === -->
+    <section class="stage" aria-label="Filament Selection">
+      <div class="panel scanlines" role="region" aria-labelledby="filTitle">
+        <div class="header">
+          <div class="logoBox" aria-hidden="true">
+            <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <rect x="6" y="14" width="52" height="36" rx="8" fill="#071026"></rect>
+              <path d="M12 22c10-8 36-8 44 0" stroke="#00F0FF" stroke-width="2.6" stroke-linecap="round"></path>
+              <circle cx="22" cy="32" r="5" fill="#FF3ADF"></circle>
+            </svg>
+          </div>
+          <div>
+            <h1 id="filTitle" style="color:var(--neon-cyan)">FILAMENTS</h1>
+            <div class="subtitle">Pick one or more — we'll email the selection</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:18px;align-items:flex-start;margin-top:12px;flex:1">
+          <div style="flex:1;display:flex;flex-direction:column;gap:10px">
+            <div class="muted">Available (eSUN PLA+ family)</div>
+            <div class="grid" id="filGrid">
+              <!-- cards inserted here, but also provided in HTML for clarity -->
+              <div class="fil-card" data-name="PLA+ Black">
+                <div class="spool" style="background:linear-gradient(180deg,#0b0b0b,#222)">B</div>
+                <div class="fil-meta">
+                  <div class="name">PLA+ Black</div>
+                  <div class="sub">eSUN PLA+</div>
+                </div>
+              </div>
+
+              <div class="fil-card" data-name="PLA+ Cold White">
+                <div class="spool" style="background:linear-gradient(180deg,#f6fbff,#dfe9f5);color:#071026">W</div>
+                <div class="fil-meta">
+                  <div class="name">PLA+ Cold White</div>
+                  <div class="sub">eSUN PLA+</div>
+                </div>
+              </div>
+
+              <div class="fil-card" data-name="PLA+ Silk Blue">
+                <div class="spool" style="background:linear-gradient(180deg,#a6e0ff,#2b7de6)">B</div>
+                <div class="fil-meta">
+                  <div class="name">PLA+ Silk Blue</div>
+                  <div class="sub">eSUN Silk</div>
+                </div>
+              </div>
+
+              <div class="fil-card" data-name="PLA+ Silk Red">
+                <div class="spool" style="background:linear-gradient(180deg,#ffb4b4,#ff3b3b)">R</div>
+                <div class="fil-meta">
+                  <div class="name">PLA+ Silk Red</div>
+                  <div class="sub">eSUN Silk</div>
+                </div>
+              </div>
+
+              <div class="fil-card" data-name="PLA+ Silk Green">
+                <div class="spool" style="background:linear-gradient(180deg,#c9ffd0,#2ecc71)">G</div>
+                <div class="fil-meta">
+                  <div class="name">PLA+ Silk Green</div>
+                  <div class="sub">eSUN Silk</div>
+                </div>
+              </div>
+
+              <div class="fil-card" data-name="PLA+ Silk Gold & Silver">
+                <div class="spool" style="background:linear-gradient(90deg,#d4af37 0%, #c0c0c0 60%);color:#08111b">GS</div>
+                <div class="fil-meta">
+                  <div class="name">PLA+ Silk Gold & Silver</div>
+                  <div class="sub">Dual-color</div>
+                </div>
+              </div>
+
+              <div class="fil-card" data-name="PLA+ Matte Dark Gray">
+                <div class="spool" style="background:linear-gradient(180deg,#4b4f54,#17181a);color:#fff">M</div>
+                <div class="fil-meta">
+                  <div class="name">PLA+ Matte Dark Gray</div>
+                  <div class="sub">eSUN Matte</div>
+                </div>
+              </div>
+
+            </div>
+
+            <div style="display:flex;gap:10px;align-items:center;margin-top:8px">
+              <div class="muted">Selected:</div>
+              <div class="count" id="selectedCount">0</div>
+              <div style="flex:1"></div>
+              <button id="resetBtn" class="btn ghost">RESET</button>
+            </div>
+          </div>
+
+          <aside style="width:360px;min-width:240px;display:flex;flex-direction:column;gap:12px">
+            <div style="background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.02)">
+              <div class="muted">Submission Summary</div>
+              <div style="margin-top:8px">
+                <div class="muted">Model</div>
+                <div id="sumModel" style="font-weight:700;color:#c8faff;word-break:break-all;margin-top:6px">No model</div>
+              </div>
+
+              <div style="margin-top:10px">
+                <div class="muted">Filaments</div>
+                <div id="sumFil" style="font-weight:700;color:var(--neon-lime);margin-top:6px">—</div>
+              </div>
+
+              <div style="margin-top:12px;text-align:center">
+                <button id="sendEmail" class="btn neon" disabled>SEND EMAIL</button>
+              </div>
+
+              <div style="margin-top:10px;font-size:12px;color:var(--muted)">
+                Email subject will include: <strong>"Important: Possible"</strong> so you can filter or highlight.
+              </div>
+            </div>
+
+            <div style="background:transparent;color:var(--muted);font-size:13px">
+              Pro tip: If you want a preview (title/thumbnail) I can add a small backend to fetch OG tags. This current build keeps everything client-side and fast.
+            </div>
+
+            <div style="display:flex;gap:8px;justify-content:space-between">
+              <button id="backToAnalyze" class="btn ghost">← Back</button>
+              <div class="muted">v1.0 • client-side</div>
+            </div>
+          </aside>
+        </div>
+
+        <div class="wipe" id="wipe3"></div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<div class="toast" id="toast">Message</div>
+
+<script>
+/* =========================
+   Configuration (EmailJS)
+   ========================= */
+const EMAILJS_SERVICE_ID = 'YOUR_SERVICE_ID';
+const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID';
+const EMAILJS_USER_ID = 'YOUR_USER_ID'; // public key
+
+// Initialize EmailJS if user replaced placeholder
+if(window.emailjs && EMAILJS_USER_ID !== 'YOUR_USER_ID'){
+  emailjs.init(EMAILJS_USER_ID);
+}
+
+/* =========================
+   Page navigation helpers
+   ========================= */
+const stageWrap = document.getElementById('stageWrap');
+let currentIndex = 0; // 0=landing,1=analyze,2=filament
+
+function goTo(index){
+  currentIndex = Math.max(0, Math.min(2, index));
+  stageWrap.style.transform = `translateX(${-100 * currentIndex}vw)`;
+  // fancy wipe animation trigger
+  const wipe = document.getElementById('wipe' + (currentIndex+1));
+  if(wipe){
+    wipe.style.transition = 'none';
+    wipe.style.transform = 'skewX(-14deg) translateX(-120%)';
+    requestAnimationFrame(()=> {
+      wipe.style.transition = 'transform .9s cubic-bezier(.16,.84,.24,1)';
+      wipe.style.transform = 'skewX(-14deg) translateX(120%)';
+    });
+    setTimeout(()=> wipe.style.transform = 'skewX(-14deg) translateX(-220%)', 900);
+  }
+  // ensure focus/scroll behavior for accessibility
+  window.scrollTo({top:0});
+}
+document.getElementById('start').addEventListener('click', ()=> goTo(1));
+document.getElementById('backToStart').addEventListener('click', ()=> goTo(0));
+document.getElementById('howItWorks').addEventListener('click', ()=> {
+  showToast('Open Thingiverse/MakerWorld → copy model link → paste → analyze → choose filaments → send');
+});
+document.getElementById('backToAnalyze').addEventListener('click', ()=> goTo(1));
+
+/* =========================
+   Analyze stage logic
+   ========================= */
+const modelInput = document.getElementById('modelInput');
+const analyzeBtn = document.getElementById('analyzeBtn');
+const previewArea = document.getElementById('previewArea');
+const anStatus = document.getElementById('anStatus');
+const toFilamentBtn = document.getElementById('toFilament');
+const errMsg = document.getElementById('errMsg');
+
+const allowedPattern = /^(https?:\/\/)?(www\.)?(thingiverse\.com|makerworld\.com|maker\.world)\/.+/i;
+
+function setAnalysisState(stateText){ anStatus.textContent = stateText; }
+
+function simpleHostname(urlStr){
+  try{ const u = new URL(urlStr.includes('://') ? urlStr : ('https://'+urlStr)); return u.hostname.replace('www.',''); }
+  catch(e){ return ''; }
+}
+
+function renderPreview(u){
+  const host = u.hostname.replace('www.','');
+  previewArea.innerHTML = `
+    <div class="preview">
+      <div class="icon">${host.replace('.com','').slice(0,6)}</div>
+      <div class="meta">
+        <div class="path">${escapeHTML(u.pathname || u.href)}</div>
+        <div class="domain">${escapeHTML(u.hostname)} · ${escapeHTML(u.protocol.replace(':',''))}</div>
+        <div style="margin-top:8px;color:var(--muted);font-size:13px">Detected link looks valid. Click <strong>Use this</strong> to continue.</div>
+        <div style="margin-top:8px">
+          <button id="openOrig" class="btn ghost">Open</button>
+          <button id="useThis" class="btn neon" style="margin-left:8px">Use this</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('openOrig').addEventListener('click', ()=> window.open(u.href, '_blank'));
+  document.getElementById('useThis').addEventListener('click', ()=>{
+    // store analyzed link in localStorage for stage handoff
+    const payload = { url: u.href, host: u.hostname, path: u.pathname };
+    localStorage.setItem('printmate_analyzed', JSON.stringify(payload));
+    setAnalysisState('ready');
+    toFilamentBtn.disabled = false;
+    showToast('Link saved — continue to filaments');
+  });
+}
+
+function showError(msg){
+  errMsg.style.display = 'block';
+  errMsg.textContent = msg;
+  setTimeout(()=> errMsg.style.display = 'none', 3500);
+}
+
+analyzeBtn.addEventListener('click', ()=>{
+  const url = (modelInput.value || '').trim();
+  if(!url){ showError('Paste a link first'); return; }
+  if(!allowedPattern.test(url)){ showError('Only Thingiverse & MakerWorld links allowed'); return; }
+  try{
+    const u = new URL(url.includes('://') ? url : ('https://'+url));
+    renderPreview(u);
+    setAnalysisState('analyzed');
+    // store temp analysis but require user to click Use this to confirm
+    window._analysisTemp = {url: u.href, host: u.hostname, path: u.pathname};
+  } catch(e){
+    showError('Invalid URL');
+  }
+});
+
+modelInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter'){ analyzeBtn.click(); }});
+
+toFilamentBtn.addEventListener('click', ()=>{
+  // ensure we've saved an analyzed link
+  const stored = localStorage.getItem('printmate_analyzed');
+  if(!stored){
+    showToast('Use the analyzed link first');
+    return;
+  }
+  goTo(2);
+  populateSummaryFromStorage();
+});
+
+/* =========================
+   Filament selection logic
+   ========================= */
+const filCards = Array.from(document.querySelectorAll('.fil-card'));
+const selectedSet = new Set();
+const selectedCountEl = document.getElementById('selectedCount');
+const sumModel = document.getElementById('sumModel');
+const sumFil = document.getElementById('sumFil');
+const sendEmailBtn = document.getElementById('sendEmail');
+const resetBtn = document.getElementById('resetBtn');
+
+function updateSelectionUI(){
+  selectedCountEl.textContent = selectedSet.size;
+  sumFil.textContent = selectedSet.size ? Array.from(selectedSet).join(', ') : '—';
+  sendEmailBtn.disabled = selectedSet.size === 0 || !localStorage.getItem('printmate_analyzed');
+}
+
+filCards.forEach(card=>{
+  card.addEventListener('click', ()=>{
+    const name = card.getAttribute('data-name');
+    if(selectedSet.has(name)){ selectedSet.delete(name); card.classList.remove('selected'); }
+    else { selectedSet.add(name); card.classList.add('selected'); card.animate([{transform:'scale(1.03)'},{transform:'scale(1)'}],{duration:240})}
+    updateSelectionUI();
+  });
+});
+
+resetBtn.addEventListener('click', ()=>{
+  selectedSet.clear();
+  filCards.forEach(c=>c.classList.remove('selected'));
+  updateSelectionUI();
+});
+
+function populateSummaryFromStorage(){
+  const stored = localStorage.getItem('printmate_analyzed');
+  if(stored){
+    const obj = JSON.parse(stored);
+    sumModel.textContent = obj.url;
+    sumFil.textContent = selectedSet.size ? Array.from(selectedSet).join(', ') : '—';
+    sendEmailBtn.disabled = selectedSet.size === 0;
+  } else {
+    sumModel.textContent = 'No model';
+  }
+}
+
+/* initialize */
+updateSelectionUI();
+populateSummaryFromStorage();
+
+/* =========================
+   Email sending logic (EmailJS)
+   ========================= */
+sendEmailBtn.addEventListener('click', async ()=>{
+  const stored = localStorage.getItem('printmate_analyzed');
+  if(!stored){ showToast('No model to send'); return; }
+  if(selectedSet.size === 0){ showToast('Choose at least one filament'); return; }
+
+  const obj = JSON.parse(stored);
+  const filaments = Array.from(selectedSet).join(', ');
+  const data = {
+    model_link: obj.url,
+    filaments,
+    timestamp: new Date().toLocaleString(),
+    subject: 'Important: Possible - PrintMate submission'
+  };
+
+  // If EmailJS not configured, copy payload to clipboard & log
+  if(typeof emailjs === 'undefined' || EMAILJS_USER_ID === 'YOUR_USER_ID'){
+    const payload = `Subject: ${data.subject}\n\nModel link: ${data.model_link}\nFilaments: ${data.filaments}\nTime: ${data.timestamp}`;
+    try{ await navigator.clipboard.writeText(payload); }
+    catch(e){}
+    console.log('Prepared email payload (EmailJS not configured):', data);
+    showToast('EmailJS not configured — payload copied to clipboard');
+    return;
+  }
+
+  try{
+    sendEmailBtn.disabled = true;
+    sendEmailBtn.textContent = 'SENDING...';
+    const res = await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, data);
+    showToast('Sent ✅');
+    sendEmailBtn.textContent = 'SEND EMAIL';
+    sendEmailBtn.disabled = false;
+    // optionally reset
+    resetBtn.click();
+    localStorage.removeItem('printmate_analyzed');
+    setTimeout(()=> goTo(0), 900);
+  } catch(err){
+    console.error(err);
+    showToast('Send failed — check console');
+    sendEmailBtn.disabled = false;
+    sendEmailBtn.textContent = 'SEND EMAIL';
+  }
+});
+
+/* =========================
+   Utilities & UX helpers
+   ========================= */
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._t);
+  t._t = setTimeout(()=> t.classList.remove('show'), 2800);
+}
+
+function escapeHTML(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* Keep summary updated if localStorage changed (e.g. user used a previous analyze) */
+window.addEventListener('storage', populateSummaryFromStorage);
+
+/* Allow left/right arrow navigation for pages (nice to have) */
+window.addEventListener('keydown', (e)=>{
+  if(e.key === 'ArrowRight'){ goTo(currentIndex+1); }
+  if(e.key === 'ArrowLeft'){ goTo(currentIndex-1); }
+});
+
+/* On load: if there's a saved analysis, show it in preview */
+(function initFromStorage(){
+  const stored = localStorage.getItem('printmate_analyzed');
+  if(stored){
+    const obj = JSON.parse(stored);
+    // show a small preview in analyze stage in case user returns
+    try {
+      const u = new URL(obj.url);
+      renderPreview(u);
+      setAnalysisState('saved');
+      toFilamentBtn.disabled = false;
+      sumModel.textContent = obj.url;
+    } catch(e){}
+  }
+})();
+
+/* Small accessibility: focus the first input when navigating to analyze */
+document.getElementById('start').addEventListener('click', ()=> setTimeout(()=> modelInput.focus(), 490));
+
+// helper to render preview from saved object (used by init)
+function renderPreview(u){
+  try{
+    const host = u.hostname.replace('www.','');
+    previewArea.innerHTML = `
+      <div class="preview">
+        <div class="icon">${host.replace('.com','').slice(0,6)}</div>
+        <div class="meta">
+          <div class="path">${escapeHTML(u.pathname || u.href)}</div>
+          <div class="domain">${escapeHTML(u.hostname)} · ${escapeHTML(u.protocol.replace(':',''))}</div>
+          <div style="margin-top:8px;color:var(--muted);font-size:13px">Saved model link detected.</div>
+          <div style="margin-top:8px">
+            <button id="openOrig" class="btn ghost">Open</button>
+            <button id="useThis" class="btn neon" style="margin-left:8px">Use this</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.getElementById('openOrig').addEventListener('click', ()=> window.open(u.href, '_blank'));
+    document.getElementById('useThis').addEventListener('click', ()=>{
+      localStorage.setItem('printmate_analyzed', JSON.stringify({url:u.href, host:u.hostname, path:u.pathname}));
+      setAnalysisState('ready');
+      toFilamentBtn.disabled = false;
+      showToast('Link confirmed — continue');
+    });
+  } catch(e){
+    previewArea.innerHTML = `<div class="muted">No valid saved link</div>`;
+  }
+}
+</script>
+
+</body>
+</html>
