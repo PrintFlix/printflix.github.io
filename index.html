@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>PrintMate — Retro Analyzer</title>
+<title>PrintFlix — Printing your ideas to life</title>
 
 <!-- Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -169,14 +169,14 @@
             </svg>
           </div>
           <div>
-            <h1 id="landingTitle">PRINTMATE</h1>
-            <div class="subtitle">Retro-Funky Model Analyzer</div>
+            <h1 id="landingTitle">PRINTFLIX</h1>
+            <div class="subtitle">Printing your ideas to life</div>
           </div>
         </div>
 
         <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px">
-          <div class="bigTitle flicker">ANALYZE • SELECT • SHARE</div>
-          <div class="leadSmall muted">Paste a Thingiverse or MakerWorld model — pick filament — email the results. Fast, minimal, neon.</div>
+          <div class="bigTitle flicker">DISCOVER • PICK • PRINT</div>
+          <div class="leadSmall muted">Bringing your dreams to life. (Site owned by ManolisG)</div>
 
           <div style="margin-top:16px;display:flex;gap:12px;">
             <button id="start" class="btn neon" aria-label="Start">START</button>
@@ -186,7 +186,7 @@
 
         <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px dashed rgba(255,255,255,0.03);padding-top:12px;">
           <div class="muted">Made for quick sharing with friends</div>
-          <div class="muted">v1.0 · retro build</div>
+          <div class="muted">v2.0 · stable build</div>
         </div>
 
         <div class="wipe" id="wipe1"></div>
@@ -205,7 +205,7 @@
             </svg>
           </div>
           <div>
-            <h1 id="analyzeTitle" style="color:var(--neon-lime)">LINK ANALYZER</h1>
+            <h1 id="analyzeTitle" style="color:var(--neon-lime)">STEP 1: PASTE YOUR MODEL LINK BELOW:</h1>
             <div class="subtitle">Paste a Thingiverse or MakerWorld model link below</div>
           </div>
         </div>
@@ -270,14 +270,14 @@
             </svg>
           </div>
           <div>
-            <h1 id="filTitle" style="color:var(--neon-cyan)">FILAMENTS</h1>
-            <div class="subtitle">Pick one or more — we'll email the selection</div>
+            <h1 id="filTitle" style="color:var(--neon-cyan)">STEP 2: PICK YOUR DESIRABLE FILAMENT TYPE AND COLOUR</h1>
+            <div class="subtitle">Pick one or more — we'll then submit your request to manolisg.</div>
           </div>
         </div>
 
         <div style="display:flex;gap:18px;align-items:flex-start;margin-top:12px;flex:1">
           <div style="flex:1;display:flex;flex-direction:column;gap:10px">
-            <div class="muted">Available (eSUN PLA+ family)</div>
+            <div class="muted">Available</div>
             <div class="grid" id="filGrid">
               <!-- cards inserted here, but also provided in HTML for clarity -->
               <div class="fil-card" data-name="PLA+ Black">
@@ -296,26 +296,26 @@
                 </div>
               </div>
 
-              <div class="fil-card" data-name="PLA+ Silk Blue">
+              <div class="fil-card" data-name="PLA Silk Blue">
                 <div class="spool" style="background:linear-gradient(180deg,#a6e0ff,#2b7de6)">B</div>
                 <div class="fil-meta">
-                  <div class="name">PLA+ Silk Blue</div>
+                  <div class="name">PLA Silk Blue</div>
                   <div class="sub">eSUN Silk</div>
                 </div>
               </div>
 
-              <div class="fil-card" data-name="PLA+ Silk Red">
+              <div class="fil-card" data-name="PLA Silk Red">
                 <div class="spool" style="background:linear-gradient(180deg,#ffb4b4,#ff3b3b)">R</div>
                 <div class="fil-meta">
-                  <div class="name">PLA+ Silk Red</div>
+                  <div class="name">PLA Silk Red</div>
                   <div class="sub">eSUN Silk</div>
                 </div>
               </div>
 
-              <div class="fil-card" data-name="PLA+ Silk Green">
+              <div class="fil-card" data-name="PLA Silk Green">
                 <div class="spool" style="background:linear-gradient(180deg,#c9ffd0,#2ecc71)">G</div>
                 <div class="fil-meta">
-                  <div class="name">PLA+ Silk Green</div>
+                  <div class="name">PLA Silk Green</div>
                   <div class="sub">eSUN Silk</div>
                 </div>
               </div>
@@ -323,7 +323,7 @@
               <div class="fil-card" data-name="PLA+ Silk Gold & Silver">
                 <div class="spool" style="background:linear-gradient(90deg,#d4af37 0%, #c0c0c0 60%);color:#08111b">GS</div>
                 <div class="fil-meta">
-                  <div class="name">PLA+ Silk Gold & Silver</div>
+                  <div class="name">PLA Silk Gold & Silver</div>
                   <div class="sub">Dual-color</div>
                 </div>
               </div>
@@ -331,7 +331,7 @@
               <div class="fil-card" data-name="PLA+ Matte Dark Gray">
                 <div class="spool" style="background:linear-gradient(180deg,#4b4f54,#17181a);color:#fff">M</div>
                 <div class="fil-meta">
-                  <div class="name">PLA+ Matte Dark Gray</div>
+                  <div class="name">PLA Matte Dark Gray</div>
                   <div class="sub">eSUN Matte</div>
                 </div>
               </div>
@@ -360,7 +360,7 @@
               </div>
 
               <div style="margin-top:12px;text-align:center">
-                <button id="sendEmail" class="btn neon" disabled>SEND EMAIL</button>
+                <button id="sendEmail" class="btn neon" disabled>SUBMIT MODEL</button>
               </div>
 
               <div style="margin-top:10px;font-size:12px;color:var(--muted)">
@@ -369,12 +369,12 @@
             </div>
 
             <div style="background:transparent;color:var(--muted);font-size:13px">
-              Pro tip: If you want a preview (title/thumbnail) I can add a small backend to fetch OG tags. This current build keeps everything client-side and fast.
+              Pro tip: If you have any special requests (branding, etc) send an email to emgeorgat11@gmail.com
             </div>
 
             <div style="display:flex;gap:8px;justify-content:space-between">
               <button id="backToAnalyze" class="btn ghost">← Back</button>
-              <div class="muted">v1.0 • client-side</div>
+              <div class="muted">v2.0 • client-side</div>
             </div>
           </aside>
         </div>
@@ -392,12 +392,12 @@
 /* =========================
    Configuration (EmailJS)
    ========================= */
-const EMAILJS_SERVICE_ID = 'YOUR_SERVICE_ID';
-const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID';
-const EMAILJS_USER_ID = 'YOUR_USER_ID'; // public key
+const EMAILJS_SERVICE_ID = 'service_uc7qhx6';
+const EMAILJS_TEMPLATE_ID = 'template_ojbab1z';
+const EMAILJS_USER_ID = 'cKIvBE13OUMahyu0L'; // public key
 
 // Initialize EmailJS if user replaced placeholder
-if(window.emailjs && EMAILJS_USER_ID !== 'YOUR_USER_ID'){
+if(window.emailjs && EMAILJS_USER_ID !== 'cKIvBE13OUMahyu0L'){
   emailjs.init(EMAILJS_USER_ID);
 }
 
@@ -573,11 +573,11 @@ sendEmailBtn.addEventListener('click', async ()=>{
     model_link: obj.url,
     filaments,
     timestamp: new Date().toLocaleString(),
-    subject: 'Important: Possible - PrintMate submission'
+    subject: 'Important: New PrintFlix submission'
   };
 
   // If EmailJS not configured, copy payload to clipboard & log
-  if(typeof emailjs === 'undefined' || EMAILJS_USER_ID === 'YOUR_USER_ID'){
+  if(typeof emailjs === 'undefined' || EMAILJS_USER_ID === 'cKIvBE13OUMahyu0L'){
     const payload = `Subject: ${data.subject}\n\nModel link: ${data.model_link}\nFilaments: ${data.filaments}\nTime: ${data.timestamp}`;
     try{ await navigator.clipboard.writeText(payload); }
     catch(e){}
